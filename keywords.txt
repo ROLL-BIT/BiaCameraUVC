@@ -1,0 +1,7 @@
+BiaCameraUVC	KEYWORD1
+begin	KEYWORD2
+setEstado	KEYWORD2
+ligar	KEYWORD2
+desligar	KEYWORD2
+isLigada	KEYWORD2
+isStreaming	KEYWORD2
