@@ -1,4 +1,67 @@
-BiaCameraUVC 📷🤖Uma biblioteca robusta para o ESP32-S3 que permite capturar vídeo de câmeras USB (UVC / MJPEG) via DMA e transmitir em tempo real via Wi-Fi/TCP para o computador (Python).Criada especialmente para projetos de robótica autônoma e visão computacional, ela roda totalmente em segundo plano (FreeRTOS) e foi projetada para ser imune a quedas de rede e falhas físicas.✨ Principais Recursos🔌 Hot-Plug Real: Você pode desplugar e plugar a câmera com o ESP32 ligado, e o vídeo volta automaticamente sem travar o microcontrolador.🔋 Controle Inteligente de Bateria (Standby): A câmera só liga fisicamente quando o seu script Python está aberto solicitando a imagem. Se o Python fechar ou pausar, o ESP32 corta a comunicação USB, colocando a câmera em modo de suspensão de energia.🚀 Zero Travamentos: O loop de captura roda isolado em segundo plano. Você pode controlar motores, matrizes de LED e áudio I2S perfeitamente em paralelo no seu void loop().🐍 Receptor Python Pronto: Acompanha a classe completa BiaCameraReceiver, auto-reconectável e não-bloqueante, pronta para integrar com OpenCV, YOLO e sistemas de visão computacional.⚠️ Requisitos de Hardware e Jumper de 5VPara que o projeto funcione corretamente, preste atenção aos detalhes do hardware:Placa Compatível: ESP32-S3 com PSRAM (recomendado: ESP32-S3 N16R8), pois possui suporte nativo a USB Host Full-Speed via hardware e memória PSRAM para os buffers de vídeo.🔌 O Jumper de 5V (CRÍTICO): A porta USB do ESP32-S3 precisa fornecer 5V (VBUS) para alimentar a câmera externa. Na grande maioria das placas de desenvolvimento (Freenove, YD-ESP32-S3, etc.), essa energia vem desconectada de fábrica. Você precisa localizar o jumper rotulado como USB, OTG ou 5V -> VBUS na placa e fechá-lo (soldar os dois pads). Sem isso, a câmera não ligará!Câmera: Câmeras USB (UVC) genéricas com suporte ao formato MJPEG.🛠️ Como Instalar (Arduino IDE)A biblioteca está disponível oficialmente no Gerenciador de Bibliotecas da Arduino IDE:Abra a Arduino IDE.Clique no ícone do Gerenciador de Bibliotecas (Library Manager) na barra lateral esquerda.Digite BiaCameraUVC na barra de busca.Localize BiaCameraUVC by Rogério Gonçalves e clique em Instalar (Install).Pronto! Agora basta adicionar #include <BiaCameraUVC.h> no topo do seu código.⚙️ Configuração Obrigatória na Arduino IDE (ESP32-S3 N16R8)⚠️ ATENÇÃO — LEIA ANTES DE GRAVAR:Antes de compilar e enviar o código para o seu ESP32-S3 N16R8, confira todos os itens abaixo no menu Ferramentas (Tools) da Arduino IDE. As opções marcadas como CRÍTICO impedem a câmera de inicializar se estiverem configuradas de forma diferente:Configuração (Menu Ferramentas)Valor ObrigatórioPor que isso importa?Placa (Board)ESP32S3 Dev ModulePlaca base padrão para o ESP32-S3.USB ModeHardware CDC and JTAGCRÍTICO: Se ficar em USB-OTG (TinyUSB), o TinyUSB sequestra o controlador OTG e o usb_host_install() da câmera falha.USB CDC On BootDisabledMantém o Monitor Serial funcionando pela porta UART sem brigar com a porta USB da câmera.PSRAMOPI PSRAMCRÍTICO: A câmera aloca 3 buffers de 64 KB (BIA_MAX_JPEG_SIZE) usando ps_malloc quando psramFound() é verdadeiro; sem PSRAM, tenta tirar 192 KB da RAM interna e falha.Flash Size16MB (128Mb)Tamanho total da memória flash do módulo N16R8.Flash ModeQIO 80MHzModo e velocidade de comunicação da flash.Partition Scheme16M Flash (3MB APP/9.9MB FATFS)Garante folga de sobra para firmwares maiores e uso de ArduinoOTA.Upload Speed921600Gravação rápida (se falhar o upload, abaixe para 460800).💻 Exemplo Prático: Código do ESP32-S3Veja como é simples integrar a câmera no seu projeto sem travar o void loop(). Substitua SEU_WIFI, SUA_SENHA e o SERVIDOR_IP (IP local do computador rodando o script Python):#include <Arduino.h>
+# BiaCameraUVC 📷🤖
+
+Uma biblioteca robusta para o **ESP32-S3** que permite capturar vídeo de câmeras USB (UVC / MJPEG) via DMA e transmitir em tempo real via Wi-Fi/TCP para o computador (Python).
+
+Criada especialmente para projetos de robótica autônoma e visão computacional, ela roda totalmente em segundo plano (FreeRTOS) e foi projetada para ser imune a quedas de rede e falhas físicas.
+
+---
+
+## ✨ Principais Recursos
+
+* **🔌 Hot-Plug Real:** Você pode desplugar e plugar a câmera com o ESP32 ligado, e o vídeo volta automaticamente sem travar o microcontrolador.
+* **🔋 Controle Inteligente de Bateria (Standby):** A câmera só liga fisicamente quando o seu script Python está aberto solicitando a imagem. Se o Python fechar ou pausar, o ESP32 corta a comunicação USB, colocando a câmera em modo de suspensão de energia.
+* **🚀 Zero Travamentos:** O loop de captura roda isolado em segundo plano. Você pode controlar motores, matrizes de LED e áudio I2S perfeitamente em paralelo no seu `void loop()`.
+* **🐍 Receptor Python Pronto:** Acompanha a classe completa `BiaCameraReceiver`, auto-reconectável e não-bloqueante, pronta para integrar com OpenCV, YOLO e sistemas de visão computacional.
+
+---
+
+## ⚠️ Requisitos de Hardware e Jumper de 5V
+
+Para que o projeto funcione corretamente, preste atenção aos detalhes do hardware:
+
+1. **Placa Compatível:** **ESP32-S3 com PSRAM** (recomendado: **ESP32-S3 N16R8**), pois possui suporte nativo a USB Host Full-Speed via hardware e memória PSRAM para os buffers de vídeo.
+2. **🔌 O Jumper de 5V (CRÍTICO):** A porta USB do ESP32-S3 precisa fornecer 5V (`VBUS`) para alimentar a câmera externa. Na grande maioria das placas de desenvolvimento (Freenove, YD-ESP32-S3, etc.), essa energia vem desconectada de fábrica. **Você precisa localizar o jumper rotulado como `USB`, `OTG` ou `5V -> VBUS` na placa e fechá-lo (soldar os dois pads).** Sem isso, a câmera não ligará!
+3. **Câmera:** Câmeras USB (UVC) genéricas com suporte ao formato **MJPEG**.
+
+---
+
+## 🛠️ Como Instalar (Arduino IDE)
+
+A biblioteca está disponível oficialmente no **Gerenciador de Bibliotecas da Arduino IDE**:
+
+1. Abra a **Arduino IDE**.
+2. Clique no ícone do **Gerenciador de Bibliotecas** (*Library Manager*) na barra lateral esquerda.
+3. Digite **`BiaCameraUVC`** na barra de busca.
+4. Localize **BiaCameraUVC by Rogério Gonçalves** e clique em **Instalar** (*Install*).
+
+Pronto! Agora basta adicionar `#include <BiaCameraUVC.h>` no topo do seu código.
+
+---
+
+## ⚙️ Configuração Obrigatória na Arduino IDE (ESP32-S3 N16R8)
+
+> ⚠️ **ATENÇÃO — LEIA ANTES DE GRAVAR:**  
+> Antes de compilar e enviar o código para o seu **ESP32-S3 N16R8**, confira **todos** os itens abaixo no menu **Ferramentas (Tools)** da Arduino IDE. As opções marcadas como **CRÍTICO** impedem a câmera de inicializar se estiverem configuradas de forma diferente:
+
+| Configuração (Menu Ferramentas) | Valor Obrigatório | Por que isso importa? |
+| :--- | :--- | :--- |
+| **Placa (Board)** | `ESP32S3 Dev Module` | Placa base padrão para o ESP32-S3. |
+| **USB Mode** | **`Hardware CDC and JTAG`** | **CRÍTICO:** Se ficar em `USB-OTG (TinyUSB)`, o TinyUSB sequestra o controlador OTG e o `usb_host_install()` da câmera falha. |
+| **USB CDC On Boot** | `Disabled` | Mantém o Monitor Serial funcionando pela porta UART sem brigar com a porta USB da câmera. |
+| **PSRAM** | **`OPI PSRAM`** | **CRÍTICO:** A câmera aloca 3 buffers de 64 KB (`BIA_MAX_JPEG_SIZE`) usando `ps_malloc` quando `psramFound()` é verdadeiro; sem PSRAM, tenta tirar 192 KB da RAM interna e falha. |
+| **Flash Size** | `16MB (128Mb)` | Tamanho total da memória flash do módulo N16R8. |
+| **Flash Mode** | `QIO 80MHz` | Modo e velocidade de comunicação da flash. |
+| **Partition Scheme** | `16M Flash (3MB APP/9.9MB FATFS)` | Garante folga de sobra para firmwares maiores e uso de `ArduinoOTA`. |
+| **Upload Speed** | `921600` | Gravação rápida (se falhar o upload, abaixe para `460800`). |
+
+---
+
+## 💻 Exemplo Prático: Código do ESP32-S3
+
+Veja como é simples integrar a câmera no seu projeto sem travar o `void loop()`. Substitua `SEU_WIFI`, `SUA_SENHA` e o `SERVIDOR_IP` (IP local do computador rodando o script Python):
+
+```cpp
+#include <Arduino.h>
 #include <WiFi.h>
 #include <BiaCameraUVC.h>
 
@@ -31,8 +94,24 @@ void loop() {
   // Seu loop fica 100% livre para motores, sensores e outras tarefas.
   delay(1000);
 }
-🐍 Código do Receptor no PC (Python)1. Instale as dependênciasNo terminal do seu computador, instale o OpenCV e o NumPy:pip install opencv-python numpy
-2. Salve e execute o receptor (bia_camera.py)Salve o código abaixo como bia_camera.py e execute. Ele já abre a janela ao vivo automaticamente e pode ser importado em outros projetos de IA/Visão Computacional:import socket
+```
+
+---
+
+## 🐍 Código do Receptor no PC (Python)
+
+### 1. Instale as dependências
+No terminal do seu computador, instale o OpenCV e o NumPy:
+
+```bash
+pip install opencv-python numpy
+```
+
+### 2. Salve e execute o receptor (`bia_camera.py`)
+Salve o código abaixo como `bia_camera.py` e execute. Ele já abre a janela ao vivo automaticamente e pode ser importado em outros projetos de IA/Visão Computacional:
+
+```python
+import socket
 import struct
 import threading
 import time
@@ -300,8 +379,17 @@ class BiaCameraReceiver:
 if __name__ == "__main__":
     cam = BiaCameraReceiver(porta=5005)
     cam.exibir_janela_ao_vivo()
-3. Uso rápido importando em outro projeto PythonSe quiser usar o bia_camera.py dentro de um projeto maior (como OpenCV ou YOLO), bastam 3 linhas:from bia_camera import BiaCameraReceiver
+```
+
+### 3. Uso rápido importando em outro projeto Python
+Se quiser usar o `bia_camera.py` dentro de um projeto maior (como OpenCV ou YOLO), bastam 3 linhas:
+
+```python
+from bia_camera import BiaCameraReceiver
 
 cam = BiaCameraReceiver(porta=5005)
 cam.exibir_janela_ao_vivo()
-💡 Dica de Ouro (Controle Remoto de Bateria):Com a janela de vídeo aberta, pressione a tecla 's' para pausar o vídeo e colocar a câmera no ESP32 em Standby (economizando bateria). Pressione 's' novamente para acordá-la. Ao fechar o script (tecla 'q' ou ESC), a câmera desliga automaticamente.
+```
+
+> **💡 Dica de Ouro (Controle Remoto de Bateria):**  
+> Com a janela de vídeo aberta, pressione a **tecla `'s'`** para pausar o vídeo e colocar a câmera no ESP32 em **Standby** (economizando bateria). Pressione **`'s'`** novamente para acordá-la. Ao fechar o script (**tecla `'q'`** ou `ESC`), a câmera desliga automaticamente.
